@@ -1,4 +1,8 @@
 package com.povod9.adcampaign.dto;
 
-public record ProductRequest() {
+import jakarta.validation.constraints.NotBlank;
+
+public record ProductRequest(
+        @NotBlank String name
+) {
 }
