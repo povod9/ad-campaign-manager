@@ -1,4 +1,7 @@
 package com.povod9.adcampaign.dto;
 
-public class ExceptionDto {
+public record ExceptionDto(
+        String message,
+        String errorMessage
+) {
 }
