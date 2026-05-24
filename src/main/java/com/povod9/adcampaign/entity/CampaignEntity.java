@@ -42,12 +42,14 @@ public class CampaignEntity {
     @Enumerated(EnumType.STRING)
     private Status status;
 
+    @ElementCollection(targetClass = TownName.class)
+    @CollectionTable(name = "campaign_town", joinColumns = @JoinColumn(name = "campaign_id"))
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private TownName town;
+    private List<TownName> town = new ArrayList<>();
 
     @Column(nullable = false)
-    private int radius;
+    private Integer radius;
 
     @ManyToOne
     @JoinColumn(name = "product_id")

@@ -1,3 +1,19 @@
+server:
+  port: 8080
+
+
 spring:
   application:
     name: adcampaign
+  datasource:
+    url: jdbc:h2:mem:adcampaign-db;DB_CLOSE_DELAY=-1
+    username: sa
+    password: root
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+jwt:
+  secret: ${JWT_SECRET:sekjdfnlkjwsenfkon4euioo34wjfg4noiserdnvflkresvnln344}
+  expiration: ${JWT_EXPIRATION:8600000}
