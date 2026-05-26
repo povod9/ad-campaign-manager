@@ -12,7 +12,7 @@ public record CampaignUpdateRequest(
     List<String> keywords,
     @DecimalMin(value = "10.00", message = "Bid amount must be at least 10.00")
         BigDecimal bidAmount,
-    @Positive BigDecimal campaignFund,
+    @Positive(message = "Campaign fund must be greater than 0") BigDecimal campaignFund,
     Status status,
     List<TownName> town,
     @Positive Integer radius,

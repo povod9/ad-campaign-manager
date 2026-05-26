@@ -109,6 +109,16 @@ public class CampaignServiceImpl implements CampaignService {
     PrincipalDto principalDto = getCurrentPrincipalOrThrow();
     CampaignEntity campaignEntity = getCampaignOrThrow(id);
     checkCampaignOwnerOrThrow(campaignEntity, principalDto);
+    if(campaignUpdateRequest.campaignFund() != null){
+      SellerEntity sellerEntity = campaignEntity.getProduct().getSeller();
+      if(sellerEntity.getEmeraldAmountFunds().compareTo(campaignUpdateRequest.campaignFund()) < 0){
+        throw new IllegalArgumentException("Not enough emeralds! Your balance: " + sellerEntity.getEmeraldAmountFunds());
+      }
+      BigDecimal newSellerEmeraldAmountFunds = sellerEntity.getEmeraldAmountFunds().subtract(campaignUpdateRequest.campaignFund());
+      sellerEntity.setEmeraldAmountFunds(newSellerEmeraldAmountFunds);
+      BigDecimal newCampaignEmeraldAmountFunds = campaignEntity.getCampaignFund().add(campaignUpdateRequest.campaignFund());
+      campaignEntity.setCampaignFund(newCampaignEmeraldAmountFunds);
+    }
     mapper.updateEntityFromRequest(campaignUpdateRequest, campaignEntity);
     return mapper.entityToResponse(campaignEntity);
   }

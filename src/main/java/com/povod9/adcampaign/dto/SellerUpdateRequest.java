@@ -1,7 +1,6 @@
 package com.povod9.adcampaign.dto;
 
-import jakarta.validation.constraints.Positive;
-import java.math.BigDecimal;
+import jakarta.validation.constraints.NotNull;
 
 public record SellerUpdateRequest(
-    String sellerName, String email, String password, @Positive BigDecimal emeraldAmountFunds) {}
+        @NotNull String sellerName, @NotNull String email, @NotNull String password) {}

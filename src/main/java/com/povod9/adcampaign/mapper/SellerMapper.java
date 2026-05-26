@@ -12,7 +12,6 @@ public interface SellerMapper {
 
   SellerResponse entityToResponse(SellerEntity sellerEntity);
 
-  @Mapping(target = "emeraldAmountFunds", ignore = true)
   @Mapping(target = "email", ignore = true)
   @Mapping(target = "password", ignore = true)
   void updateEntityFromResponse(
