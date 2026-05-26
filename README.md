@@ -15,6 +15,20 @@ The service will run on http://localhost:8080 by default.
 
 ---
 
+## How to Run
+
+### Prerequisites
+- Java 21
+- Maven
+
+### Steps
+1. Clone the repository.
+2. Build the project:
+   ```bash
+   mvn spring-boot:run
+   
+---
+
 ## ENV/Configuration
 
 **JWT secret and expiration must be set either via environment variables or in application.yaml:**
