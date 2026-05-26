@@ -6,7 +6,6 @@
  import com.povod9.adcampaign.mapper.SellerMapper;
  import com.povod9.adcampaign.repository.SellerRepository;
  import com.povod9.adcampaign.security.JwtCore;
- import com.povod9.adcampaign.security.SecurityContextService;
  import jakarta.persistence.EntityNotFoundException;
  import org.junit.jupiter.api.Test;
  import org.junit.jupiter.api.extension.ExtendWith;
@@ -41,7 +40,7 @@
      private JwtCore jwtCore;
 
      @Mock
-     private SecurityContextService securityContextService;
+     private SecurityContextServiceImpl securityContextService;
 
      @InjectMocks
      private SellerServiceImpl service;

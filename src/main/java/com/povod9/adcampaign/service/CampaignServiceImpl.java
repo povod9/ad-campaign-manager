@@ -5,12 +5,10 @@ import com.povod9.adcampaign.dto.*;
 import com.povod9.adcampaign.entity.CampaignEntity;
 import com.povod9.adcampaign.entity.ProductEntity;
 import com.povod9.adcampaign.entity.SellerEntity;
-import com.povod9.adcampaign.exception.AccessDeniedException;
 import com.povod9.adcampaign.mapper.CampaignMapper;
 import com.povod9.adcampaign.repository.CampaignRepository;
 import com.povod9.adcampaign.repository.ProductRepository;
 import com.povod9.adcampaign.repository.SellerRepository;
-import com.povod9.adcampaign.security.SecurityContextService;
 import jakarta.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
 import java.util.List;
@@ -24,15 +22,13 @@ public class CampaignServiceImpl implements CampaignService {
 
   private final CampaignRepository campaignRepository;
   private final ProductRepository productRepository;
-  private final SellerRepository sellerRepository;
   private final CampaignMapper mapper;
   private final SecurityContextService securityContextService;
 
   @Override
   public CampaignResponse campaignById(Long id) {
-    PrincipalDto principalDto = securityContextService.getCurrentPrincipalOrThrow();
     CampaignEntity campaignEntity = getCampaignOrThrow(id);
-    checkCampaignOwnerOrThrow(campaignEntity, principalDto);
+    securityContextService.verifyCampaignOwner(campaignEntity);
     return mapper.entityToResponse(campaignEntity);
   }
 
@@ -47,7 +43,7 @@ public class CampaignServiceImpl implements CampaignService {
   @Override
   @Transactional
   public CampaignResponse createCampaign(CampaignRequest campaignRequest) {
-    PrincipalDto principalDto = securityContextService.getCurrentPrincipalOrThrow();
+    SellerEntity sellerEntity = securityContextService.getCurrentSellerOrThrow();
 
     ProductEntity productEntity =
         productRepository
@@ -57,16 +53,7 @@ public class CampaignServiceImpl implements CampaignService {
                     new EntityNotFoundException(
                         "Cannot find product by id: " + campaignRequest.productId()));
 
-    SellerEntity sellerEntity =
-        sellerRepository
-            .findById(principalDto.id())
-            .orElseThrow(
-                () ->
-                    new EntityNotFoundException("Cannot find seller by id: " + principalDto.id()));
-
-    if (!productEntity.getSeller().getSellerId().equals(principalDto.id())) {
-      throw new AccessDeniedException("Forbidden");
-    }
+    securityContextService.verifyProductOwner(productEntity);
 
     if (sellerEntity.getEmeraldAmountFunds().compareTo(campaignRequest.campaignFund()) < 0) {
       throw new IllegalArgumentException(
@@ -76,7 +63,6 @@ public class CampaignServiceImpl implements CampaignService {
     BigDecimal newBalance =
         sellerEntity.getEmeraldAmountFunds().subtract(campaignRequest.campaignFund());
     sellerEntity.setEmeraldAmountFunds(newBalance);
-    sellerRepository.save(sellerEntity);
 
     CampaignEntity campaignEntity =
         new CampaignEntity(
@@ -98,18 +84,16 @@ public class CampaignServiceImpl implements CampaignService {
   @Override
   @Transactional
   public void deleteById(Long id) {
-    PrincipalDto principalDto = securityContextService.getCurrentPrincipalOrThrow();
     CampaignEntity campaignEntity = getCampaignOrThrow(id);
-    checkCampaignOwnerOrThrow(campaignEntity, principalDto);
+    securityContextService.verifyCampaignOwner(campaignEntity);
     campaignRepository.delete(campaignEntity);
   }
 
   @Override
   @Transactional
   public CampaignResponse updateById(Long id, CampaignUpdateRequest campaignUpdateRequest) {
-    PrincipalDto principalDto = securityContextService.getCurrentPrincipalOrThrow();
     CampaignEntity campaignEntity = getCampaignOrThrow(id);
-    checkCampaignOwnerOrThrow(campaignEntity, principalDto);
+    securityContextService.verifyCampaignOwner(campaignEntity);
     if(campaignUpdateRequest.campaignFund() != null){
       SellerEntity sellerEntity = campaignEntity.getProduct().getSeller();
       if(sellerEntity.getEmeraldAmountFunds().compareTo(campaignUpdateRequest.campaignFund()) < 0){
@@ -124,15 +108,9 @@ public class CampaignServiceImpl implements CampaignService {
     return mapper.entityToResponse(campaignEntity);
   }
 
-  private void checkCampaignOwnerOrThrow(CampaignEntity campaignEntity, PrincipalDto principalDto) {
-    if (!campaignEntity.getProduct().getSeller().getSellerId().equals(principalDto.id())) {
-      throw new AccessDeniedException("Forbidden");
-    }
-  }
-
   private CampaignEntity getCampaignOrThrow(Long id) {
     return campaignRepository
-        .findById(id)
-        .orElseThrow(() -> new EntityNotFoundException("Cannot find campaign by id: " + id));
+            .findById(id)
+            .orElseThrow(() -> new EntityNotFoundException("Cannot find campaign by id: " + id));
   }
 }

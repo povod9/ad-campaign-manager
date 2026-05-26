@@ -7,7 +7,6 @@ import com.povod9.adcampaign.exception.InvalidCredentialsException;
 import com.povod9.adcampaign.mapper.SellerMapper;
 import com.povod9.adcampaign.repository.SellerRepository;
 import com.povod9.adcampaign.security.JwtCore;
-import com.povod9.adcampaign.security.SecurityContextService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;

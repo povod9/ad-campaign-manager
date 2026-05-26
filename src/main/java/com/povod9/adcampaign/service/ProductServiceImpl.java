@@ -6,11 +6,8 @@ import com.povod9.adcampaign.dto.ProductRequest;
 import com.povod9.adcampaign.dto.ProductResponse;
 import com.povod9.adcampaign.entity.ProductEntity;
 import com.povod9.adcampaign.entity.SellerEntity;
-import com.povod9.adcampaign.exception.AccessDeniedException;
 import com.povod9.adcampaign.mapper.ProductMapper;
 import com.povod9.adcampaign.repository.ProductRepository;
-import com.povod9.adcampaign.repository.SellerRepository;
-import com.povod9.adcampaign.security.SecurityContextService;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -22,14 +19,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class ProductServiceImpl implements ProductService {
 
   private final ProductRepository productRepository;
-  private final SellerRepository sellerRepository;
   private final ProductMapper mapper;
   private final SecurityContextService securityContextService;
 
   @Override
   @Transactional
   public ProductResponse createProduct(ProductRequest productRequest) {
-    SellerEntity sellerEntity = getCurrentSellerOrThrow();
+    SellerEntity sellerEntity = securityContextService.getCurrentSellerOrThrow();
 
     ProductEntity productEntity = new ProductEntity(null, productRequest.name(), sellerEntity);
 
@@ -39,12 +35,11 @@ public class ProductServiceImpl implements ProductService {
 
   @Override
   public ProductResponse productById(Long id) {
-    PrincipalDto principalDto = securityContextService.getCurrentPrincipalOrThrow();
     ProductEntity productEntity =
         productRepository
             .findById(id)
             .orElseThrow(() -> new EntityNotFoundException("Cannot find product by id: " + id));
-    checkProductOwnerOrThrow(productEntity, principalDto);
+    securityContextService.verifyProductOwner(productEntity);
     return mapper.entityToResponse(productEntity);
   }
 
@@ -61,12 +56,12 @@ public class ProductServiceImpl implements ProductService {
   @Override
   @Transactional
   public ProductResponse updateProductById(Long id, ProductRequest productRequest) {
-    PrincipalDto principalDto = securityContextService.getCurrentPrincipalOrThrow();
+
     ProductEntity productEntity =
         productRepository
             .findById(id)
             .orElseThrow(() -> new EntityNotFoundException("Cannot find product by id: " + id));
-    checkProductOwnerOrThrow(productEntity, principalDto);
+    securityContextService.verifyProductOwner(productEntity);
 
     if (productRequest.name() != null) {
       productEntity.setProductName(productRequest.name());
@@ -76,16 +71,4 @@ public class ProductServiceImpl implements ProductService {
     return mapper.entityToResponse(savedProduct);
   }
 
-  private SellerEntity getCurrentSellerOrThrow() {
-    PrincipalDto principalDto = securityContextService.getCurrentPrincipalOrThrow();
-    return sellerRepository
-        .findById(principalDto.id())
-        .orElseThrow(() -> new EntityNotFoundException("Cannot find by id: " + principalDto.id()));
-  }
-
-  private void checkProductOwnerOrThrow(ProductEntity product, PrincipalDto principal) {
-    if (!product.getSeller().getSellerId().equals(principal.id())) {
-      throw new AccessDeniedException("Forbidden");
-    }
-  }
 }
